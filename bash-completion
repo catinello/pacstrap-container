@@ -1,0 +1,20 @@
+_pacstrap_container()
+{
+	local cur prev cword
+	_init_completion -s || return
+
+	if [[ $cword == 1 ]]; then
+		COMPREPLY=( $( compgen -W 'create delete' -- "$cur" ) )
+	elif [[ $cword == 2 ]]; then
+	        case "$prev" in
+        	        create)
+                	        COMPREPLY=( $( compgen -W '-b -v' -- "$cur" ) )
+				return
+	                        ;;
+			delete)
+				return
+				;;
+	        esac
+	fi
+} &&
+complete -F _pacstrap_container pacstrap-container

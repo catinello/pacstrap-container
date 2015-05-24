@@ -1,0 +1,19 @@
+# $Id$
+# Maintainer: Antonino Catinello <ac@antoo.org>
+
+pkgname=pacstrap-container
+pkgver=0.1
+pkgrel=1
+pkgdesc="Arch Linux Systemd Containers"
+arch=('any')
+url="https://github.com/catinello/pacstrap-container.git"
+license=('MIT')
+depends=('bash' 'systemd' 'pacman' 'arch-install-scripts')
+
+build() {
+  make -C "$pkgname-$pkgver"
+}
+
+package() {
+  make -C "$pkgname-$pkgver" PREFIX=/usr DESTDIR="$pkgdir" install
+}
