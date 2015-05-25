@@ -8,9 +8,11 @@ Simple way to create arch-linux systemd containers with removed spare packages.
     # git clone https://github.com/catinello/pacstrap-container.git
     # cd pacstrap-container; make && make PREFIX=/usr install
 
-##Requirements:##
+##Dependencies:##
 
-    # pacman -S systemd pacman arch-install-scripts
+- systemd
+- bash
+- arch-install-scripts
 
 ##Usage:##
 
@@ -46,6 +48,8 @@ Deleting a systemd container:
     Machine MyContainer successfully deleted.
 
 ##Logging:##
+
+Output from called commands are redirected to the syslog facility and tagged accordingly.
 
     # journalctl -t pacstrap-container -fa
 
