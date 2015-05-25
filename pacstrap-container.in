@@ -5,7 +5,7 @@ LICENSE="MIT"
 
 MACHINEDIR="/var/lib/machines"
 CONFIGDIR="/etc/systemd/system/multi-user.target.wants"
-SPARE="dhcpcd netctl jfsutils cryptsetup lvm2 device-mapper mdadm pciutils pcmciautils reiserfsprogs usbutils xfsprogs linux"
+SPARE="logrotate diffutils inetutils dhcpcd netctl jfsutils cryptsetup lvm2 device-mapper mdadm pciutils pcmciautils reiserfsprogs usbutils xfsprogs linux"
 
 BOOT=""
 VANILLA=""
@@ -29,6 +29,7 @@ Description:
   NAME:
 	systemd container/machine name
 
+Version: $VERSION - License: $LICENSE
 EOF
 }
 
@@ -56,7 +57,7 @@ syncMetaData() {
 }
 
 removePackage() {
-	log "/usr/bin/arch-chroot $MACHINEDIR/$NAME pacman -Rn --noconfirm $1"
+	log "/usr/bin/arch-chroot $MACHINEDIR/$NAME pacman -Rns --noconfirm $1"
 }
 
 changeConfig() {
@@ -68,13 +69,12 @@ createContainer() {
 		err "Error: Machine name already exists."
 		exit 90
 	else
-		msg "Creating"
+		msg "creating"
 		echo -n " -> "
 		mkdir $MACHINEDIR/$NAME
 
-		msg "installing base"
+		msg "installing"
 		echo -n " -> "
-		#log "/usr/bin/pacstrap -G -M -c -d $MACHINEDIR/$NAME base core/run-parts"
 		log "/usr/bin/pacstrap -G -c -d $MACHINEDIR/$NAME base core/run-parts"
 
 		msg "cleanup"
@@ -83,8 +83,19 @@ createContainer() {
 		removePackage "$SPARE"
 		removePackage "$(pacman -Qtdq)"
 
+		msg "vanilla"
+		echo -n " -> "
+		if [ -n "$VANILLA" ]; then
+			changeConfig "/usr/bin/sed -i 's/^HoldPkg.*/HoldPkg     = glibc/' /etc/pacman.conf"
+			removePackage "gnupg pacman"
+			changeConfig "rm -rfv /etc/pacman.* /var/*/pacman"
+		fi
+
 		msg "modify"
 		echo -n " -> "
+		if [ -n "$BOOT" ]; then
+			log "/usr/bin/systemctl enable systemd-nspawn@$NAME.service"
+		fi
 		changeConfig "/usr/bin/sed -i '/# End of file/i pts/0' /etc/securetty"
 		log "ln -s /usr/lib/systemd/system/systemd-nspawn@.service $CONFIGDIR/systemd-nspawn@$NAME.service"
 		log "/usr/bin/systemctl daemon-reload"
@@ -129,7 +140,7 @@ fi
 case $1 in
 	create)
 		shift
-		while getopts "bc" opt; do
+		while getopts "bv" opt; do
 		    case $opt in
 			b)
 		            BOOT=yes
@@ -145,17 +156,6 @@ case $1 in
 		done
 
 		createContainer
-
-		if [ -n "$VANILLA" ]; then
-			log "pacman -Rns pacman"
-			log "rm -rfv /etc/pacman.* /var/*/pacman"
-		fi
-
-		if [ -n "$BOOT" ]; then
-			log "/usr/bin/systemctl enable systemd-nspawn@$NAME.service"
-		fi
-
-
 		;;
 	delete)
 		deleteContainer
