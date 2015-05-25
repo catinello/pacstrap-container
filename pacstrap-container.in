@@ -88,7 +88,7 @@ createContainer() {
 		if [ -n "$VANILLA" ]; then
 			changeConfig "/usr/bin/sed -i 's/^HoldPkg.*/HoldPkg     = glibc/' /etc/pacman.conf"
 			removePackage "gnupg pacman"
-			changeConfig "rm -rfv /etc/pacman.* /var/*/pacman"
+			changeConfig "rm -rfv /etc/pacman.* /var/*/pacman /var/log/pacman.log"
 		fi
 
 		msg "modify"
