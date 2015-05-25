@@ -1,0 +1,30 @@
+.TH pacstrap-container 1  "May 25, 2015" "Version 0.1" "USER COMMANDS"
+.SH NAME
+pacstrap-container \- arch-linux systemd containers
+.SH SYNOPSIS
+.B pacstrap-container
+ (create|delete) [OPTIONS] NAME
+ Description:
+  (COMMANDS):
+    create      create a new container
+    delete      delete a container
+  [OPTIONS]:
+    create
+        -b  enable container startup on boot
+        -v  vanilla minimal linux os
+    delete
+        --
+  NAME:
+    systemd container/machine name
+.SH DESCRIPTION
+Simple way to create arch-linux systemd containers with removed spare packages.
+.SH EXIT STATUS
+(0) Success.
+(90) Error: Machine name already exists.
+(91) Usage Error
+(92) Error: Please run as root!
+(all other) represents the passed through return value of a called executable.
+.SH LICENSE
+MIT-License
+.SH AUTHOR
+Antonino Catinello (ac (at) antoo.org)
