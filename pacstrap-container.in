@@ -1,30 +1,32 @@
 #!/bin/bash
 
-VERSION="0.1"
+VERSION="0.2"
 LICENSE="MIT"
 
 MACHINEDIR="/var/lib/machines"
 CONFIGDIR="/etc/systemd/system/multi-user.target.wants"
 SPARE="logrotate diffutils inetutils dhcpcd netctl jfsutils cryptsetup lvm2 device-mapper mdadm pciutils pcmciautils reiserfsprogs usbutils xfsprogs linux"
+STRIP="gpgme gnupg pacman"
 
 BOOT=""
-VANILLA=""
-SILENT=""
+STRIPPED=""
+QUIET=""
 
 usage() {
 	cat <<EOF
 Usage: ${0##*/} (create|delete) [OPTIONS] NAME
 Description:
   (COMMANDS):
-	create		create a new container
+	create		create a new base container
 	delete		delete a container
 
   [OPTIONS]:
 	create
 		-b	enable container startup on boot
-		-v 	vanilla minimal linux os
+		-q	no output
+		-s 	stripped minimal linux os
 	delete
-		--
+		-q	no output
 
   NAME:
 	systemd container/machine name
@@ -34,13 +36,29 @@ EOF
 }
 
 msg() {
-	echo -e -n "\033[0;32m$1\033[0m"
-	echo $1 2>&1 | logger -t ${0##*/}
+	if [ "$QUIET" == "" ]; then
+		if [ "$2" == "nc" ]; then
+			echo -n "$1"
+			echo "$1" 2>&1 | logger -t ${0##*/}
+		else
+			echo -e -n "\033[0;32m$1\033[0m"
+			echo "$1" 2>&1 | logger -t ${0##*/}
+		fi
+	fi
 }
 
+newline() {
+        if [ "$QUIET" == "" ]; then
+                echo 
+        fi
+}
+
+
 err() {
-	echo -e "\033[0;31m$1\033[0m"
-	echo $1 2>&1 | logger -t ${0##*/}
+	if [ "$QUIET" == "" ]; then
+		echo -e "\033[0;31m$1\033[0m"
+		echo "$1" 2>&1 | logger -t ${0##*/}
+	fi
 }
 
 log() {
@@ -70,29 +88,29 @@ createContainer() {
 		exit 90
 	else
 		msg "creating"
-		echo -n " -> "
+		msg " -> " "nc"
 		mkdir $MACHINEDIR/$NAME
 
 		msg "installing"
-		echo -n " -> "
+		msg " -> " "nc"
 		log "/usr/bin/pacstrap -G -c -d $MACHINEDIR/$NAME base core/run-parts"
 
 		msg "cleanup"
-		echo -n " -> "
+		msg " -> " "nc"
 		syncMetaData
 		removePackage "$SPARE"
 		removePackage "$(pacman -Qtdq)"
 
-		msg "vanilla"
-		echo -n " -> "
-		if [ -n "$VANILLA" ]; then
+		if [ -n "$STRIPPED" ]; then
+			msg "strip"
+			msg " -> " "nc"
 			changeConfig "/usr/bin/sed -i 's/^HoldPkg.*/HoldPkg     = glibc/' /etc/pacman.conf"
-			removePackage "gnupg pacman"
+			removePackage $STRIP
 			changeConfig "rm -rfv /etc/pacman.* /var/*/pacman /var/log/pacman.log"
 		fi
 
 		msg "modify"
-		echo -n " -> "
+		msg " -> " "nc"
 		if [ -n "$BOOT" ]; then
 			log "/usr/bin/systemctl enable systemd-nspawn@$NAME.service"
 		fi
@@ -101,7 +119,7 @@ createContainer() {
 		log "/usr/bin/systemctl daemon-reload"
 
 		msg "done"
-		echo
+		newline
 	fi
 }
 
@@ -115,12 +133,17 @@ deleteContainer() {
 		log "rm -fv $CONFIGDIR/systemd-nspawn@$NAME.service"
 		log "/usr/bin/systemctl daemon-reload"
 		msg "Machine $NAME successfully deleted."
-		echo
+		newline
 	fi
 }
 
+
 if [ "$#" -ge "2" ]; then
 	NAME=${@: -1}
+	if [[ $NAME =~ ^-.* ]]; then
+		usage
+		exit 91
+	fi
 else
 	usage
 	exit 91
@@ -128,25 +151,29 @@ fi
 
 if [ "$EUID" -ne 0 ]; then
 	err "Error: Please run as root!"
-	exit 92
-fi
-
-if [ -z "$NAME" ]; then
-	err "Error: NAME is required"
-	usage
 	exit 91
 fi
+
+for i in $(hostnamectl); do 
+	if [ "$i" == "container" ]; then 
+		err "Error: Please don't run inside of a container!"
+		exit 91
+	fi
+done
 
 case $1 in
 	create)
 		shift
-		while getopts "bv" opt; do
+		while getopts "bqs" opt; do
 		    case $opt in
 			b)
 		            BOOT=yes
 		            ;;
-			v)
-		            VANILLA=yes
+			q)
+			    QUIET=yes
+			    ;;
+			s)
+		            STRIPPED=yes
 		            ;;
 		        *)
 			    usage
@@ -158,6 +185,19 @@ case $1 in
 		createContainer
 		;;
 	delete)
+		shift
+		while getopts "q" opt; do
+                    case $opt in
+                        q)
+                            QUIET=yes
+                            ;;
+                        *)
+                            usage
+                            exit 91
+                            ;;
+                    esac
+                done
+
 		deleteContainer
 		;;
 	*)

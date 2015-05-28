@@ -3,7 +3,7 @@ pacstrap-container
 
 Simple way to create arch-linux systemd containers with removed spare packages.
 
-##Installation:##
+##Installation via git:##
 
     # git clone https://github.com/catinello/pacstrap-container.git
     # cd pacstrap-container; make && make PREFIX=/usr install
@@ -22,11 +22,12 @@ Simple way to create arch-linux systemd containers with removed spare packages.
     	create		create a new container
     	delete		delete a container
       [OPTIONS]:
-    	create
-    		-b	enable container startup on boot
-    		-v 	vanilla minimal linux os
-    	delete
-    		--
+        create
+                -b      enable container startup on boot
+                -q      no output
+                -s      stripped minimal linux os
+        delete
+                -q      no output
       NAME:
     	systemd container/machine name
 

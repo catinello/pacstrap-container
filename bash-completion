@@ -1,21 +1,34 @@
 _pacstrap_container()
 {
-	local cur prev cword
+	local cur cword
 	_init_completion -s || return
 
 	MACHINE_DIR="/var/lib/machines"
+	COMPREPLY=()
 
-	if [[ $cword == 1 ]]; then
-		COMPREPLY=( $( compgen -W 'create delete' -- "${COMP_WORDS[$COMP_CWORD]}" ) )
-	elif [[ $cword == 2 ]]; then
-	        case "$prev" in
+	cur=${COMP_WORDS[COMP_CWORD]}
+	opt=${COMP_WORDS[1]}
+
+	if [[ "$cword" == 1 ]]; then
+		COMPREPLY=( $( compgen -W 'create delete' -- "$cur" ) )
+		return
+	elif [[ "$cword" > 1 ]]; then
+		case "$opt" in
         	        create)
-                	        COMPREPLY=( $( compgen -W '-b -v' -- "${COMP_WORDS[$COMP_CWORD]}" ) )
+			        COMPREPLY=( $( compgen -W '-b -q -s' -- "$cur" ) )
+
 				return
 	                        ;;
 			delete)
-				IFS=$'\n' tmp=( $(compgen -W "$(ls "$MACHINE_DIR")" -- "${COMP_WORDS[$COMP_CWORD]}" ))
+				if [[ "$cword" == 2 ]]; then
+					IFS=$'\n' tmp=( $( compgen -W '-q $(ls ${MACHINE_DIR})' -- "$cur" ) )
+				else
+					IFS=$'\n' tmp=( $( compgen -W '$(ls ${MACHINE_DIR})' -- "$cur" ) )
+				fi
+
+				IFS=$' \t\n'
 				COMPREPLY=( "${tmp[@]// /\ }" )
+
 				return
 				;;
 	        esac
