@@ -1,4 +1,4 @@
-VER=0.2
+VER=0.3
 IN = install
 GZ = gzip -fk
 PREFIX = /usr/local

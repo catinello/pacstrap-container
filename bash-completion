@@ -15,7 +15,7 @@ _pacstrap_container()
 	elif [[ "$cword" > 1 ]]; then
 		case "$opt" in
         	        create)
-			        COMPREPLY=( $( compgen -W '-b -q -s' -- "$cur" ) )
+			        COMPREPLY=( $( compgen -W '-b -q' -- "$cur" ) )
 
 				return
 	                        ;;
