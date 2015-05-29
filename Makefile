@@ -1,4 +1,4 @@
-VER=0.1
+VER=0.2
 IN = install
 GZ = gzip -fk
 PREFIX = /usr/local
@@ -26,6 +26,6 @@ uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/share/man/man1/$(BINPROGS).1.gz
 
 dist:
-	git archive --format=tar.gz --prefix=pacstrap-container-$(VER)/ master > pacstrap-container-$(VER).tar.gz
+	git archive --format=tar.gz --prefix=pacstrap-container-$(VER)/ v$(VER) > pacstrap-container-$(VER).tar.gz
 
 .PHONY: all clean install uninstall dist
