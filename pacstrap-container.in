@@ -1,15 +1,13 @@
 #!/bin/bash
 
-VERSION="0.2"
+VERSION="0.3"
 LICENSE="MIT"
 
 MACHINEDIR="/var/lib/machines"
 CONFIGDIR="/etc/systemd/system/multi-user.target.wants"
 SPARE="logrotate diffutils inetutils dhcpcd netctl jfsutils cryptsetup lvm2 device-mapper mdadm pciutils pcmciautils reiserfsprogs usbutils xfsprogs linux"
-STRIP="gpgme gnupg pacman"
 
 BOOT=""
-STRIPPED=""
 QUIET=""
 
 usage() {
@@ -24,7 +22,6 @@ Description:
 	create
 		-b	enable container startup on boot
 		-q	no output
-		-s 	stripped minimal linux os
 	delete
 		-q	no output
 
@@ -65,8 +62,10 @@ log() {
 	eval $1 2>&1 | logger -t ${0##*/}
 	RV=${PIPESTATUS[0]}
 	if [ "$RV" -ne "0" ]; then
-		err "Error: With return value -> $RV"
-		exit $RV
+		if [ "$1" != "pacman -Qtdq" ]; then
+			err "Error: With return value -> $RV"
+			exit $RV
+		fi
 	fi
 }
 
@@ -78,7 +77,7 @@ removePackage() {
 	log "/usr/bin/arch-chroot $MACHINEDIR/$NAME pacman -Rns --noconfirm $1"
 }
 
-changeConfig() {
+executeCommand() {
 	log "/usr/bin/arch-chroot $MACHINEDIR/$NAME $1"
 }
 
@@ -101,20 +100,12 @@ createContainer() {
 		removePackage "$SPARE"
 		removePackage "$(pacman -Qtdq)"
 
-		if [ -n "$STRIPPED" ]; then
-			msg "strip"
-			msg " -> " "nc"
-			changeConfig "/usr/bin/sed -i 's/^HoldPkg.*/HoldPkg     = glibc/' /etc/pacman.conf"
-			removePackage $STRIP
-			changeConfig "rm -rfv /etc/pacman.* /var/*/pacman /var/log/pacman.log"
-		fi
-
 		msg "modify"
 		msg " -> " "nc"
 		if [ -n "$BOOT" ]; then
 			log "/usr/bin/systemctl enable systemd-nspawn@$NAME.service"
 		fi
-		changeConfig "/usr/bin/sed -i '/# End of file/i pts/0' /etc/securetty"
+		executeCommand "/usr/bin/sed -i '/# End of file/i pts/0' /etc/securetty"
 		log "ln -s /usr/lib/systemd/system/systemd-nspawn@.service $CONFIGDIR/systemd-nspawn@$NAME.service"
 		log "/usr/bin/systemctl daemon-reload"
 
@@ -172,9 +163,6 @@ case $1 in
 			q)
 			    QUIET=yes
 			    ;;
-			s)
-		            STRIPPED=yes
-		            ;;
 		        *)
 			    usage
 		            exit 91
