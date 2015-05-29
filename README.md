@@ -4,8 +4,8 @@ pacstrap-container
 Simple way to create arch-linux systemd containers with removed spare packages.
 
 ##Installation:##
-    $ curl -O http://antonino.catinello.eu/pkg/pacstrap-container-0.3-1-any.pkg.tar.xz
-    # pacman -U pacstrap-container-0.3-1-any.pkg.tar.xz
+    $ curl -O http://antonino.catinello.eu/pkg/pacstrap-container-0.4-1-any.pkg.tar.xz
+    # pacman -U pacstrap-container-0.4-1-any.pkg.tar.xz
 
 ##Installation via git:##
 

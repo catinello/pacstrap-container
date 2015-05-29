@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.3"
+VERSION="0.4"
 LICENSE="MIT"
 
 MACHINEDIR="/var/lib/machines"
@@ -62,7 +62,7 @@ log() {
 	eval $1 2>&1 | logger -t ${0##*/}
 	RV=${PIPESTATUS[0]}
 	if [ "$RV" -ne "0" ]; then
-		if [ "$1" != "pacman -Qtdq" ]; then
+		if [ "$2" != "skip" ]; then
 			err "Error: With return value -> $RV"
 			exit $RV
 		fi
@@ -74,7 +74,11 @@ syncMetaData() {
 }
 
 removePackage() {
-	log "/usr/bin/arch-chroot $MACHINEDIR/$NAME pacman -Rns --noconfirm $1"
+	if [ "$1" != "$(pacman -Qtdq)" ]; then
+		log "/usr/bin/arch-chroot $MACHINEDIR/$NAME pacman -Rns --noconfirm $1"
+	else
+		log "/usr/bin/arch-chroot $MACHINEDIR/$NAME pacman -Rns --noconfirm $1" skip
+	fi
 }
 
 executeCommand() {
