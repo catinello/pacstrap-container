@@ -109,6 +109,9 @@ createContainer() {
 		if [ -n "$BOOT" ]; then
 			log "/usr/bin/systemctl enable systemd-nspawn@$NAME.service"
 		fi
+
+		executeCommand "/usr/bin/pacman-key --init"
+		executeCommand "/usr/bin/pacman-key --populate"
 		executeCommand "/usr/bin/sed -i '/# End of file/i pts/0' /etc/securetty"
 		log "ln -s /usr/lib/systemd/system/systemd-nspawn@.service $CONFIGDIR/systemd-nspawn@$NAME.service"
 		log "/usr/bin/systemctl daemon-reload"
@@ -159,7 +162,7 @@ done
 case $1 in
 	create)
 		shift
-		while getopts "bqs" opt; do
+		while getopts "bq" opt; do
 		    case $opt in
 			b)
 		            BOOT=yes
