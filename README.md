@@ -3,18 +3,18 @@ pacstrap-container
 
 Simple way to create arch-linux systemd containers with removed spare packages.
 
-##Installation:##
+## Installation:
 
     # git clone https://github.com/catinello/pacstrap-container.git
     # cd pacstrap-container; make && make PREFIX=/usr install
 
-##Dependencies:##
+## Dependencies:
 
 - systemd
 - bash
 - arch-install-scripts
 
-##Usage:##
+## Usage:
 
     pacstrap-container (create|delete) [OPTIONS] NAME
     Description:
@@ -30,7 +30,7 @@ Simple way to create arch-linux systemd containers with removed spare packages.
       NAME:
     	systemd container/machine name
 
-##Examples:##
+## Examples:
 
 Creating a simple arch systemd container:
 
@@ -47,13 +47,13 @@ Deleting a systemd container:
     # pacstrap-container delete MyContainer
     Machine MyContainer successfully deleted.
 
-##Logging:##
+## Logging:
 
 Output from called commands are redirected to the syslog facility and tagged accordingly.
 
     # journalctl -t pacstrap-container -fa
 
-##License:##
+## License:
 
 [&copy; Antonino Catinello][HOME] - [MIT-License][MIT]
 
